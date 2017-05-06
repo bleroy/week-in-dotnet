@@ -1,0 +1,104 @@
+﻿@model WeekInDotnet.ViewModels.HomeViewModel
+@using WeekInDotnet.Controllers
+@using System.Text.RegularExpressions
+@{ 
+    var bookmarkletUrl = $@"(
+function() {{
+    function callback() {{
+        weekInDotNet();
+    }}
+    var s=document.createElement(""script"");
+    s.src=""{Model.BaseUrl}/scripts/add-link.js"";
+    if (s.addEventListener) {{
+        s.addEventListener(""load"", callback, false)
+    }}
+    else if(s.readyState) {{
+        s.onreadystatechange = callback;
+    }}
+    document.body.appendChild(s);
+}})()";
+    var removeExtraSpace = new Regex(@"[\r\n]+\s*", RegexOptions.Multiline);
+    var minBookmarkletUrl = removeExtraSpace.Replace(bookmarkletUrl, "");
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Everything you need to submit contents for The Week in .NET">
+    <meta name="author" content="Bertrand Le Roy">
+    <title>The Week in .NET link submission</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">The Week in .NET</a>
+            </div>
+        </div>
+    </nav>
+    <div class="jumbotron">
+        <div class="container">
+            <h1>The Week in .NET link submission app</h1>
+            <p class="lead">
+                Use this bookmarklet to submit new links:<br/>
+                <a class="btn btn-primary btn-lg" href="javascript:@Html.UrlEncoder.Encode(minBookmarkletUrl)">Bookmark this!</a>
+                <span class="help-block">
+                    On Chrome, right-click this button, copy the link address,
+                    then go to <a href="chrome://bookmarks">the bookmark manager</a>,
+                    right-click on the Bookmarks Bar and "add page".
+                    Paste the link as the URL, and use "Submit to Week in .NET" as the name
+                    of the page.
+                </span>
+            </p>
+        </div>
+    </div>
+    @if (!String.IsNullOrEmpty(Model.Notification))
+    {
+        <div class="container">
+            <div class="alert alert-success" role="alert">@Model.Notification</div>
+        </div>
+    }
+    <div class="container">
+        <h2>Submit a link to The Week in .NET</h2>
+        <p class="lead">
+            Use this form to directly submit a link to The Week in .NET.
+            This is the easiest way to submit links, but not the fastest.
+            If you do regular contributions, you should consider using the bookmarklet.
+        </p>
+        <form action="@Url.Action(nameof(HomeController.AddUrl))" method="post" id="link-form">
+            <div class="form-group">
+                <label for="link">Link URL</label>
+                <input type="url" class="form-control" id="link" name="url" placeholder="Enter the URL of the post you'd like to submit."/>
+            </div>
+            <button class="btn btn-default g-recaptcha"
+                    id="submit-link"
+                    data-sitekey="@Model.CaptchaPublicKey"
+                    data-callback="onCaptchaSubmit">
+                Submit
+            </button>
+        </form>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script>
+        function onCaptchaSubmit() {
+            $('#link-form').submit();
+        }
+    </script>
+</body>
+</html>
