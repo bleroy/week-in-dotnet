@@ -1,11 +1,12 @@
 ﻿@model WeekInDotnet.ViewModels.HomeViewModel
 @using WeekInDotnet.Controllers
 @using System.Text.RegularExpressions
+@using Newtonsoft.Json
 @{ 
     var bookmarkletUrl = $@"(
 function() {{
     function callback() {{
-        weekInDotNet();
+        weekInDotNet(document, {JsonConvert.SerializeObject(Model.BaseUrl + Model.LinkServiceUrl)}, {JsonConvert.SerializeObject(Model.BaseUrl)});
     }}
     var s=document.createElement(""script"");
     s.src=""{Model.BaseUrl}/scripts/add-link.js"";
@@ -62,10 +63,18 @@ function() {{
                     right-click on the Bookmarks Bar and "add page".
                     Paste the link as the URL, and use "Submit to Week in .NET" as the name
                     of the page.
+                    <br/>
+                    The bookmarklet requires the use of an API key, which you can obtain from beleroy at microsoft.
                 </span>
             </p>
         </div>
     </div>
+    @if (!String.IsNullOrEmpty(Model.Error))
+    {
+        <div class="container">
+            <div class="alert alert-danger" role="alert">@Model.Error</div>
+        </div>
+    }
     @if (!String.IsNullOrEmpty(Model.Notification))
     {
         <div class="container">

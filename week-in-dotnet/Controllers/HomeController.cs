@@ -22,8 +22,10 @@ namespace WeekInDotnet.Controllers
             var model = new HomeViewModel
             {
                 BaseUrl = $"{Request.Scheme}://{Request.Host}",
+                LinkServiceUrl = Url.Action(nameof(LinksController.Add), "Links"),
                 CaptchaPublicKey = _captcha.Settings.PublicKey,
-                Notification = TempData["notification"] as string
+                Notification = TempData["notification"] as string,
+                Error = TempData["error"] as string
             };
             return View(model);
         }

@@ -40,5 +40,25 @@ namespace WeekInDotnet.Services
                 await _linksContext.SaveChangesAsync();
             }
         }
+
+        public virtual async Task Add(string url, string title, string author)
+        {
+            var existing = await _linksContext.FindAsync<Link>(url);
+            if (existing != null)
+            {
+                existing.Title = title;
+                existing.Author = author;
+            }
+            else
+            {
+                await _linksContext.AddAsync(new Link
+                {
+                    Url = url,
+                    Title = title,
+                    Author = author
+                });
+            }
+            await _linksContext.SaveChangesAsync();
+        }
     }
 }

@@ -9,10 +9,12 @@ namespace WeekInDotnet.Data
         { }
 
         public DbSet<Link> Links { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Link>().ForSqlServerToTable("Link");
+            modelBuilder.Entity<ApiKey>().ForSqlServerToTable("ApiKey");
         }
     }
 }
