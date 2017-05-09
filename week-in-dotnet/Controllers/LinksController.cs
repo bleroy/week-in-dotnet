@@ -30,12 +30,13 @@ namespace WeekInDotnet.Controllers
         {
             var output = new StringBuilder();
             var links = await _linksService.GetUnpublishedLinks();
-            foreach(var category in links)
+            foreach(var category in await _linksService.GetCategories())
             {
+                if (!links.ContainsKey(category)) continue;
                 output.AppendLine();
-                output.AppendLine($"## {category.Key}");
+                output.AppendLine($"## {category}");
                 output.AppendLine();
-                foreach(var link in category.Value)
+                foreach(var link in links[category])
                 {
                     output.AppendLine($"* [{link.Title}]({link.Url}) by {link.Author}.");
                 }
