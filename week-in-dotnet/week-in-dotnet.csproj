@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="wwwroot\img\gear.svg" />
     <Content Include="wwwroot\scripts\add-link.js" />
   </ItemGroup>
   <ItemGroup>

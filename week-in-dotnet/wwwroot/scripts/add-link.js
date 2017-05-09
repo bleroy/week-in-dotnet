@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-function weekInDotNet(d, serviceUrl, baseUrl) {
+function weekInDotNet(d, apiKey, serviceUrl, baseUrl) {
     var url = d.URL;
     var title = getTitle();
     var author = getAuthor();
@@ -13,6 +13,7 @@ function weekInDotNet(d, serviceUrl, baseUrl) {
 
     function getAuthor() {
         return findAny([
+            '.author-name',
             '.author .profile-display-name',
             '.author a',
             { class: 'author' },
@@ -81,43 +82,36 @@ function weekInDotNet(d, serviceUrl, baseUrl) {
             padding: margin + 'px'
         });
 
-        var apiKey = localStorage ? localStorage.getItem('WeekInDotnet.ApiKey') : '';
-        var settingsPane = append(form, 'div', {}, {
-            position: 'absolute',
-            right: margin + 'px',
-            backgroundColor: 'transparent',
-            textAlign: 'right'
-        });
-        var settingsButton = append(settingsPane, 'img', {
-            src: baseUrl + '/img/gear.svg',
-            title: 'Settings',
-            alt: 'Settings'
-        }, {}, '');
-        settingsButton.dataset.credits = 'By Wikimedia Foundation; Santhosh Thottingal ;Alolita SharmaAmir AharoniArun GaneshBrandon HarrisNiklas LaxströmPau GinerSanthosh ThottingalSiebrand Mazeland - Universal Language Selector extension of MediaWiki, https://github.com/wikimedia/mediawiki-extensions-UniversalLanguageSelector/blob/master/resources/images/cog-sprite.svg, Public Domain';
-        settingsButton.addEventListener('click', function (e) {
-            settingsDropDown.style.display = settingsDropDown.style.display === 'none' ? 'block' : 'none';
-        });
-        var settingsDropDown = append(settingsPane, 'div', {}, {
-            display: 'none',
-            backgroundColor: 'white',
-            border: 'solid 1px black',
-            padding: margin + 'px',
-            textAlign: 'left'
-        });
-        append(settingsDropDown, 'div', {}, {}, 'API Key:');
-        appendInput(settingsDropDown, apiKey, 'apikey')
-            .addEventListener('blur', function (e) {
-                if (localStorage) {
-                    localStorage.setItem('WeekInDotnet.ApiKey', e.target.value);
-                }
-            });
-
+        append(form, 'input', {type: 'hidden', name: 'apikey', value: apiKey})
         append(form, 'div', {}, {}, 'Title:');
         appendInput(form, title, 'title');
         append(form, 'div', {}, {}, 'URL:');
         appendInput(form, url, 'url');
         append(form, 'div', {}, {}, 'Author:');
         appendInput(form, author, 'author');
+        // TODO: replace this with dynamically obtained categories
+        var categories = append(form, 'fieldset', {}, {});
+        append(categories, 'legend', {}, {}, 'Category:');
+        append(categories, 'input', { id: 'widn-category-dotnet', type: 'radio', name: 'category', value: '.NET', checked: 'checked' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-dotnet' }, { marginRight: '8px' }, '.NET');
+        append(categories, 'input', { id: 'widn-category-aspnet', type: 'radio', name: 'category', value: 'ASP.NET' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-aspnet' }, { marginRight: '8px' }, 'ASP.NET');
+        append(categories, 'input', { id: 'widn-category-csharp', type: 'radio', name: 'category', value: 'C#' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-csharp' }, { marginRight: '8px' }, 'C#');
+        append(categories, 'input', { id: 'widn-category-fsharp', type: 'radio', name: 'category', value: 'F#' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-fsharp' }, { marginRight: '8px' }, 'F#');
+        append(categories, 'input', { id: 'widn-category-vb', type: 'radio', name: 'category', value: 'VB' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-vb' }, { marginRight: '8px' }, 'VB');
+        append(categories, 'input', { id: 'widn-category-xamarin', type: 'radio', name: 'category', value: 'Xamarin' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-xamarin' }, { marginRight: '8px' }, 'Xamarin');
+        append(categories, 'input', { id: 'widn-category-azure', type: 'radio', name: 'category', value: 'Azure' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-azure' }, { marginRight: '8px' }, 'Azure');
+        append(categories, 'input', { id: 'widn-category-uwp', type: 'radio', name: 'category', value: 'UWP' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-uwp' }, { marginRight: '8px' }, 'UWP');
+        append(categories, 'input', { id: 'widn-category-data', type: 'radio', name: 'category', value: 'Data' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-data' }, { marginRight: '8px' }, 'Data');
+        append(categories, 'input', { id: 'widn-category-game', type: 'radio', name: 'category', value: 'Game development' }, { marginRight: '4px' });
+        append(categories, 'label', { for: 'widn-category-game' }, { marginRight: '8px' }, 'Game development');
         append(form, 'button', {
             type: 'submit'
         }, {

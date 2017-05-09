@@ -41,13 +41,15 @@ namespace WeekInDotnet.Services
             }
         }
 
-        public virtual async Task Add(string url, string title, string author)
+        public virtual async Task Add(string url, string title, string author, string category, string submittedBy)
         {
             var existing = await _linksContext.FindAsync<Link>(url);
             if (existing != null)
             {
                 existing.Title = title;
                 existing.Author = author;
+                existing.Category = category;
+                existing.SubmittedBy = submittedBy;
             }
             else
             {
@@ -55,7 +57,9 @@ namespace WeekInDotnet.Services
                 {
                     Url = url,
                     Title = title,
-                    Author = author
+                    Author = author,
+                    Category = category,
+                    SubmittedBy = submittedBy
                 });
             }
             await _linksContext.SaveChangesAsync();

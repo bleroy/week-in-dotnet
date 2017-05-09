@@ -15,8 +15,13 @@ namespace WeekInDotnet.Services
 
         public virtual async Task<bool> Validate(string apiKey)
         {
-            var key = await _linksContext.FindAsync<ApiKey>(apiKey);
+            var key = await Find(apiKey);
             return key != null;
+        }
+
+        public virtual async Task<ApiKey> Find(string apiKey)
+        {
+            return await _linksContext.FindAsync<ApiKey>(apiKey);
         }
     }
 }

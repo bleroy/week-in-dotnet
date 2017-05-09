@@ -6,7 +6,7 @@
     var bookmarkletUrl = $@"(
 function() {{
     function callback() {{
-        weekInDotNet(document, {JsonConvert.SerializeObject(Model.BaseUrl + Model.LinkServiceUrl)}, {JsonConvert.SerializeObject(Model.BaseUrl)});
+        weekInDotNet(document, 'APIKEY', {JsonConvert.SerializeObject(Model.BaseUrl + Model.LinkServiceUrl)}, {JsonConvert.SerializeObject(Model.BaseUrl)});
     }}
     var s=document.createElement(""script"");
     s.src=""{Model.BaseUrl}/scripts/add-link.js"";
@@ -41,70 +41,70 @@ function() {{
     <nav class="navbar navbar-inverse">
         <div class="container">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
                 <a class="navbar-brand" href="/">The Week in .NET</a>
             </div>
         </div>
     </nav>
     <div class="jumbotron">
+        @if (!String.IsNullOrEmpty(Model.Error))
+        {
+            <div class="container">
+                <div class="alert alert-danger" role="alert">@Model.Error</div>
+            </div>
+        }
+        @if (!String.IsNullOrEmpty(Model.Notification))
+        {
+            <div class="container">
+                <div class="alert alert-success" role="alert">@Model.Notification</div>
+            </div>
+        }
         <div class="container">
-            <h1>The Week in .NET link submission app</h1>
+            <h2>Submit a link to The Week in .NET</h2>
             <p class="lead">
-                Use this bookmarklet to submit new links:<br/>
-                <a class="btn btn-primary btn-lg" href="javascript:@Html.UrlEncoder.Encode(minBookmarkletUrl)">Bookmark this!</a>
-                <span class="help-block">
-                    On Chrome, right-click this button, copy the link address,
-                    then go to <a href="chrome://bookmarks">the bookmark manager</a>,
-                    right-click on the Bookmarks Bar and "add page".
-                    Paste the link as the URL, and use "Submit to Week in .NET" as the name
-                    of the page.
-                    <br/>
-                    The bookmarklet requires the use of an API key, which you can obtain from beleroy at microsoft.
-                </span>
+                Use this form to directly submit a link to The Week in .NET.
+                This is the easiest way to submit links, but not the fastest.
+                If you do regular contributions, you should consider using the bookmarklet.
             </p>
+            <form action="@Url.Action(nameof(HomeController.AddUrl))" method="post" id="link-form">
+                <div class="form-group">
+                    <label for="link">Link URL</label>
+                    <input type="url" class="form-control" id="link" name="url" placeholder="Enter the URL of the post you'd like to submit." />
+                </div>
+                <button class="btn btn-default g-recaptcha"
+                        id="submit-link"
+                        data-sitekey="@Model.CaptchaPublicKey"
+                        data-callback="onCaptchaSubmit">
+                    Submit
+                </button>
+            </form>
         </div>
     </div>
-    @if (!String.IsNullOrEmpty(Model.Error))
-    {
-        <div class="container">
-            <div class="alert alert-danger" role="alert">@Model.Error</div>
-        </div>
-    }
-    @if (!String.IsNullOrEmpty(Model.Notification))
-    {
-        <div class="container">
-            <div class="alert alert-success" role="alert">@Model.Notification</div>
-        </div>
-    }
     <div class="container">
-        <h2>Submit a link to The Week in .NET</h2>
-        <p class="lead">
-            Use this form to directly submit a link to The Week in .NET.
-            This is the easiest way to submit links, but not the fastest.
-            If you do regular contributions, you should consider using the bookmarklet.
+        <h2>Get the bookmarklet</h2>
+        <label for="apikey">API key</label>
+        <input type="text" id="apikey" class="form-control" placeholder="Enter your API key"/>
+        <span class="help-block">You can get an API key by sending an email to beleroy at microsoft.</span>
+        <p>Once you've entered your API key, you may use this bookmarklet to submit new links:</p>
+            <a class="btn btn-primary btn-lg" id="bookmarklet-button" href="#">Bookmark this!</a>
+            <span class="help-block">
+                On Chrome, right-click this button, copy the link address,
+                then go to <a href="chrome://bookmarks">the bookmark manager</a>,
+                right-click on the Bookmarks Bar and "add page".
+                Paste the link as the URL, and use "Submit to Week in .NET" as the name
+                of the page.
+            </span>
         </p>
-        <form action="@Url.Action(nameof(HomeController.AddUrl))" method="post" id="link-form">
-            <div class="form-group">
-                <label for="link">Link URL</label>
-                <input type="url" class="form-control" id="link" name="url" placeholder="Enter the URL of the post you'd like to submit."/>
-            </div>
-            <button class="btn btn-default g-recaptcha"
-                    id="submit-link"
-                    data-sitekey="@Model.CaptchaPublicKey"
-                    data-callback="onCaptchaSubmit">
-                Submit
-            </button>
-        </form>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src='https://www.google.com/recaptcha/api.js'></script>
     <script>
+        $(function () {
+            var bookmarkletUrl = @Html.Raw(JsonConvert.SerializeObject(minBookmarkletUrl));
+            $('#apikey').change(function (e) {
+                $('#bookmarklet-button').prop('href', 'javascript:' + encodeURI(bookmarkletUrl.replace('APIKEY', e.target.value)));
+            });
+        });
         function onCaptchaSubmit() {
             $('#link-form').submit();
         }

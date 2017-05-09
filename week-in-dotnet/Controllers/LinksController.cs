@@ -6,11 +6,11 @@ using WeekInDotnet.ViewModels;
 using Microsoft.AspNetCore.Cors;
 using System.Security.Cryptography;
 using System;
+using System.Text;
 
 namespace WeekInDotnet.Controllers
 {
     [Route("api/[controller]")]
-    [EnableCors("AllowAll")]
     public class LinksController : Controller
     {
         private LinksService _linksService;
@@ -24,6 +24,25 @@ namespace WeekInDotnet.Controllers
             _apiKeyService = apiKeyService;
         }
 
+        // GET api/links
+        [HttpGet]
+        public async Task<string> Get()
+        {
+            var output = new StringBuilder();
+            var links = await _linksService.GetUnpublishedLinks();
+            foreach(var category in links)
+            {
+                output.AppendLine();
+                output.AppendLine($"## {category.Key}");
+                output.AppendLine();
+                foreach(var link in category.Value)
+                {
+                    output.AppendLine($"* [{link.Title}]({link.Url}) by {link.Author}.");
+                }
+            }
+            return output.ToString();
+        }
+
         // GET api/links/categories
         [HttpGet("categories")]
         public async Task<IEnumerable<string>> GetCategories() =>
@@ -33,11 +52,12 @@ namespace WeekInDotnet.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> Add(AddLinkUpdateModel addLinkUpdateModel)
         {
-            if (!await _apiKeyService.Validate(addLinkUpdateModel.ApiKey))
+            var submitter = await _apiKeyService.Find(addLinkUpdateModel.ApiKey);
+            if (submitter == null)
             {
                 TempData["error"] = "No valid API key was submitted with this link.";
             }
-            await _linksService.Add(addLinkUpdateModel.Url, addLinkUpdateModel.Title, addLinkUpdateModel.Author);
+            await _linksService.Add(addLinkUpdateModel.Url, addLinkUpdateModel.Title, addLinkUpdateModel.Author, addLinkUpdateModel.Category, submitter.OwnerName);
             TempData["notification"] = "Thanks for submitting a new link for The Week in .NET.";
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
