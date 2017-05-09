@@ -17,7 +17,9 @@ function weekInDotNet(d, apiKey, serviceUrl, baseUrl) {
             '.author .profile-display-name',
             '.author a',
             { class: 'author' },
-            'a[rel~="author"]'
+            'a[rel~="author"]',
+            '.footer-text a[href="/about"]',
+            '.copyright'
             ]);
     }
 
