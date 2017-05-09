@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using WeekInDotnet.Services;
 using System.Threading.Tasks;
 using WeekInDotnet.ViewModels;
-using Microsoft.AspNetCore.Cors;
 using System.Security.Cryptography;
 using System;
 using System.Text;
