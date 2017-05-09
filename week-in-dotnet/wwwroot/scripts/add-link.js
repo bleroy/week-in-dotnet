@@ -8,29 +8,55 @@ function weekInDotNet(d, apiKey, serviceUrl, baseUrl) {
     displayForm();
 
     function getTitle() {
-        return find({ tag: 'h1' });
+        return findAny([
+            'h1.post-title',
+            'h1#post-title',
+            'h1#ContentTitle',
+            'h1.entry-title a',
+            'h1.entry-title',
+            '#container h1',
+            '.jumbotron .lead',
+            'article h2',
+            { tag: 'h1' },
+            'h2[itemprop="headline_name"]',
+            '.main-content-wrap article>h2',
+            '.post-head h3 a'
+        ]);
     }
 
     function getAuthor() {
         return findAny([
-            '.author-name',
-            '.author .profile-display-name',
             '.author a',
-            { class: 'author' },
             'a[rel~="author"]',
+            { selector: 'meta[name="author"]', value: 'content' },
+            { class: 'author-name' },
+            '.author .profile-display-name',
+            { class: 'author' },
+            { selector: 'meta[name="twitter:data1"]', value: 'content'},
+            { class: 'community-name' },
             '.footer-text a[href="/about"]',
-            '.copyright'
+            { selector: 'img.avatar', value: 'alt' },
+            { selector: 'meta[property="og:site_name"]', value: 'content'},
+            { class: 'copyright' }
             ]);
     }
 
     function find(query) {
+        if (query.selector) {
+            var el = d.querySelector(query.selector);
+            if (el) return el[query.value];
+        }
         var els =
             (typeof query === 'string') ? [d.querySelector(query)] :
-            (query.id) ? [d.getElementById(query.id)] :
-            (query.class) ? d.getElementsByClassName(query.class) :
-            (query.tag) ? d.getElementsByTagName(query.tag) : null;
+            query.id ? [d.getElementById(query.id)] :
+            query.class ? d.getElementsByClassName(query.class) :
+            query.tag ? d.getElementsByTagName(query.tag) : [];
         if (els.length == 0 || !els[0]) return '';
-        return els[0].innerText.trim();
+        var text = els[0].innerText.trim();
+        if (text.toUpperCase() === text) {
+            text = els[0].innerHTML.trim();
+        }
+        return text.replace('&nbsp;', ' ');
     }
 
     function findAny(queries) {
@@ -70,7 +96,8 @@ function weekInDotNet(d, apiKey, serviceUrl, baseUrl) {
         append(titleBar, 'button', {}, {
             float: 'right',
             border: 'none',
-            background: 'transparent'
+            background: 'transparent',
+            color: 'white'
         }, 'X')
             .addEventListener('click', function () {
                 d.body.removeChild(dialog);
