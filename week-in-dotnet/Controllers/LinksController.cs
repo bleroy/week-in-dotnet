@@ -6,6 +6,7 @@ using WeekInDotnet.ViewModels;
 using System.Security.Cryptography;
 using System;
 using System.Text;
+using System.Linq;
 
 namespace WeekInDotnet.Controllers
 {
@@ -29,7 +30,7 @@ namespace WeekInDotnet.Controllers
         {
             var output = new StringBuilder();
             var links = await _linksService.GetUnpublishedLinks();
-            foreach(var category in await _linksService.GetCategories())
+            foreach(var category in (await _linksService.GetCategories()).Union(new[] { "" }))
             {
                 if (!links.ContainsKey(category)) continue;
                 output.AppendLine();
@@ -37,7 +38,7 @@ namespace WeekInDotnet.Controllers
                 output.AppendLine();
                 foreach(var link in links[category])
                 {
-                    output.AppendLine($"* [{link.Title}]({link.Url}) by {link.Author}.");
+                    output.AppendLine($"* [{link.Title ?? "UNKNOWN"}]({link.Url}) by {link.Author ?? "UNKNOWN"}.");
                 }
             }
             return output.ToString();
