@@ -27,7 +27,7 @@ namespace WeekInDotnet.Services
                 .Where(link => link.DatePublished == null)
                 .GroupBy(link => link.Category)
                 .ToDictionaryAsync(
-                    group => group.Key,
+                    group => group.Key ?? "",
                     group => (IList<Link>)group.ToList()
                 );
 
