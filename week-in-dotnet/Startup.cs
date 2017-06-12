@@ -117,36 +117,22 @@ namespace WeekInDotnet
                 {
                     ClientId = Configuration["Authentication:Microsoft:ClientId"],
                     ClientSecret = Configuration["Authentication:Microsoft:ClientSecret"],
-                    Scope = { "User.Read" },
+                    AutomaticAuthenticate = true,
+                    AutomaticChallenge = true,
+                    SaveTokens = true,
+                    SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme,
                     Events = new OAuthEvents
                     {
                         OnCreatingTicket = async context =>
                         {
-                            //var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-                            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-                            //var response = await context.Backchannel.SendAsync(request, context.HttpContext.RequestAborted);
-                            //response.EnsureSuccessStatusCode();
-                            //var user = JObject.Parse(await response.Content.ReadAsStringAsync());
-
-                            //var id = user.Value<string>("id");
-                            //var email = user.Value<string>("userPrincipalName");
-                            //if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(email))
-                            //{
-                            //    context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, id, ClaimValueTypes.String, context.Options.ClaimsIssuer));
-                            //    context.Identity.AddClaim(new Claim(ClaimTypes.Email, email, ClaimValueTypes.String, context.Options.ClaimsIssuer));
-                            //    var admin = await linksContext.FindAsync<Administrator>(email);
-                            //    if (admin != null)
-                            //    {
-                            //        context.Identity.AddClaims(admin
-                            //            .Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                            //            .Select(role => new Claim(ClaimTypes.Role, role.Trim(), ClaimValueTypes.String)));
-                            //    }
-                            //    var name = user.Value<string>("displayName");
-                            //    if (!string.IsNullOrEmpty(name))
-                            //    {
-                            //        context.Identity.AddClaim(new Claim(ClaimTypes.Name, name, ClaimValueTypes.String, context.Options.ClaimsIssuer));
-                            //    }
-                            //}
+                            var admin = await linksContext.FindAsync<Administrator>(
+                                context.Ticket.Principal.FindFirst(ClaimTypes.Email).Value);
+                            if (admin != null)
+                            {
+                                context.Identity.AddClaims(admin
+                                    .Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(role => new Claim(ClaimTypes.Role, role.Trim(), ClaimValueTypes.String)));
+                            }
                         }
                     }
                 })
