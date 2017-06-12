@@ -26,9 +26,9 @@ function weekInDotNet(d, apiKey, serviceUrl, baseUrl) {
 
     function getAuthor() {
         return findAny([
+            { selector: 'meta[name="author"]', value: 'content' },
             '.author a',
             'a[rel~="author"]',
-            { selector: 'meta[name="author"]', value: 'content' },
             { class: 'author-name' },
             '.author .profile-display-name',
             { class: 'author' },

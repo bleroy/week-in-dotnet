@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -61,6 +62,19 @@ namespace WeekInDotnet.Services
                     Category = category,
                     SubmittedBy = submittedBy
                 });
+            }
+            await _linksContext.SaveChangesAsync();
+        }
+
+        public virtual async Task Publish()
+        {
+            var publicationDate = DateTime.Now;
+            var unpublishedLinks = await _linksContext.Links
+                .Where(link => link.DatePublished == null)
+                .ToListAsync();
+            foreach(var link in unpublishedLinks)
+            {
+                link.DatePublished = publicationDate;
             }
             await _linksContext.SaveChangesAsync();
         }

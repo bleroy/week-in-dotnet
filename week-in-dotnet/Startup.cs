@@ -7,18 +7,42 @@ using Microsoft.EntityFrameworkCore;
 using WeekInDotnet.Data;
 using WeekInDotnet.Models;
 using WeekInDotnet.Services;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
+using WeekInDotnet.Filters;
+using Microsoft.AspNetCore.Http.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
+using System.Security.Claims;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace WeekInDotnet
 {
     public class Startup
     {
+        IHostingEnvironment _env;
+
         public Startup(IHostingEnvironment env)
         {
+            _env = env;
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
+            if (env.IsDevelopment())
+            {
+                builder.AddUserSecrets<Startup>();
+            }
+
             Configuration = builder.Build();
         }
 
@@ -28,8 +52,23 @@ namespace WeekInDotnet
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddSession();
-            services.AddMvc();
+            services
+            // Add session support
+                .AddSession()
+            // Authentication
+                .AddAuthentication(options => options
+                    .SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme
+                )
+            // Add MVC
+                .AddMvc(options =>
+                {
+                    if (_env.IsDevelopment())
+                    {
+                        options.SslPort = 44384;
+                        options.Filters.Add(new RequireHttpsAttribute());
+                    }
+                    options.Filters.Add(typeof(LoginRequiredFilter));
+                });
             // Add simple config strings
             services.Add(new ServiceDescriptor(typeof(IConfiguration), Configuration));
             // Add settings
@@ -38,15 +77,16 @@ namespace WeekInDotnet
                 .Configure<LinksSettings>(Configuration.GetSection("Links"))
                 .Configure<CaptchaSettings>(settings =>
                 {
-                    settings.PublicKey = Configuration["WEEK_IN_NET_CAPTCHA_PUBLIC"];
-                    settings.PrivateKey = Configuration["WEEK_IN_NET_CAPTCHA_SECRET"];
+                    settings.PublicKey = Configuration["Recaptcha:Public"];
+                    settings.PrivateKey = Configuration["Recaptcha:Secret"];
                 });
             // Data context
-            var connectionString = Configuration["WEEK_IN_NET_CONNECTION_STRING"];
+            var connectionString = Configuration["Database:ConnectionString"];
             services
-                .AddDbContext<LinksContext>(options => options.UseSqlServer(connectionString));
-            // Add the application's services
-            services
+                .AddDbContext<LinksContext>(options => options
+                    .UseSqlServer(connectionString)
+                    .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.QueryClientEvaluationWarning)))
+            // Register the application's services
                 .AddSingleton<LinksService>()
                 .AddSingleton<CaptchaService>()
                 .AddSingleton<ApiKeyService>();
@@ -65,7 +105,74 @@ namespace WeekInDotnet
             app
                 .UseSession()
                 .UseMvc()
-                .UseStaticFiles();
+                .UseStaticFiles()
+                .UseCookieAuthentication(new CookieAuthenticationOptions
+                {
+                    AutomaticAuthenticate = true,
+                    AutomaticChallenge = true,
+                    LoginPath = new PathString("/login"),
+                    LogoutPath = new PathString("/logout")
+                })
+                .UseMicrosoftAccountAuthentication(new MicrosoftAccountOptions
+                {
+                    ClientId = Configuration["Authentication:Microsoft:ClientId"],
+                    ClientSecret = Configuration["Authentication:Microsoft:ClientSecret"],
+                    Scope = { "User.Read" },
+                    Events = new OAuthEvents
+                    {
+                        OnCreatingTicket = async context =>
+                        {
+                            //var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                            //var response = await context.Backchannel.SendAsync(request, context.HttpContext.RequestAborted);
+                            //response.EnsureSuccessStatusCode();
+                            //var user = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+                            //var id = user.Value<string>("id");
+                            //var email = user.Value<string>("userPrincipalName");
+                            //if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(email))
+                            //{
+                            //    context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, id, ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            //    context.Identity.AddClaim(new Claim(ClaimTypes.Email, email, ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            //    var admin = await linksContext.FindAsync<Administrator>(email);
+                            //    if (admin != null)
+                            //    {
+                            //        context.Identity.AddClaims(admin
+                            //            .Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            //            .Select(role => new Claim(ClaimTypes.Role, role.Trim(), ClaimValueTypes.String)));
+                            //    }
+                            //    var name = user.Value<string>("displayName");
+                            //    if (!string.IsNullOrEmpty(name))
+                            //    {
+                            //        context.Identity.AddClaim(new Claim(ClaimTypes.Name, name, ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            //    }
+                            //}
+                        }
+                    }
+                })
+                .Map("/login", builder =>
+                {
+                    builder.Run(async context =>
+                    {
+                        await context.Authentication.ChallengeAsync("Microsoft", new AuthenticationProperties
+                        {
+                            RedirectUri = "/"
+                        });
+                    });
+                })
+                .Map("/logout", builder =>
+                {
+                    builder.Run(async context =>
+                    {
+                        await context.Authentication.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                        context.Response.Redirect("/");
+                    });
+                });
+
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
             linksContext.Database.EnsureCreated();
         }

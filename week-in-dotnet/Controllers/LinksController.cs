@@ -7,6 +7,8 @@ using System.Security.Cryptography;
 using System;
 using System.Text;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using WeekInDotnet.Attributes;
 
 namespace WeekInDotnet.Controllers
 {
@@ -58,12 +60,19 @@ namespace WeekInDotnet.Controllers
             {
                 TempData["error"] = "No valid API key was submitted with this link.";
             }
-            await _linksService.Add(addLinkUpdateModel.Url, addLinkUpdateModel.Title, addLinkUpdateModel.Author, addLinkUpdateModel.Category, submitter.OwnerName);
+            await _linksService.Add(
+                addLinkUpdateModel.Url,
+                addLinkUpdateModel.Title,
+                addLinkUpdateModel.Author,
+                addLinkUpdateModel.Category,
+                submitter.OwnerName);
+
             TempData["notification"] = "Thanks for submitting a new link for The Week in .NET.";
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         // GET api/links/newkey
+        [LogInRequired]
         [HttpGet("newkey")]
         public string NewKey()
         {
