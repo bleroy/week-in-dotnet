@@ -9,18 +9,13 @@ using WeekInDotnet.Models;
 using WeekInDotnet.Services;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using WeekInDotnet.Filters;
 using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace WeekInDotnet
 {
@@ -56,9 +51,10 @@ namespace WeekInDotnet
             // Add session support
                 .AddSession()
             // Authentication
-                .AddAuthentication(options => options
-                    .SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme
-                )
+                .AddAuthentication(options =>
+                {
+                    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                })
             // Add MVC
                 .AddMvc(options =>
                 {
@@ -67,7 +63,6 @@ namespace WeekInDotnet
                         options.SslPort = 44384;
                         options.Filters.Add(new RequireHttpsAttribute());
                     }
-                    options.Filters.Add(typeof(LoginRequiredFilter));
                 });
             // Add simple config strings
             services.Add(new ServiceDescriptor(typeof(IConfiguration), Configuration));
@@ -80,6 +75,7 @@ namespace WeekInDotnet
                     settings.PublicKey = Configuration["Recaptcha:Public"];
                     settings.PrivateKey = Configuration["Recaptcha:Secret"];
                 });
+
             // Data context
             var connectionString = Configuration["Database:ConnectionString"];
             services
@@ -102,25 +98,25 @@ namespace WeekInDotnet
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
             app
-                .UseSession()
-                .UseMvc()
                 .UseStaticFiles()
+
                 .UseCookieAuthentication(new CookieAuthenticationOptions
                 {
-                    AutomaticAuthenticate = true,
-                    AutomaticChallenge = true,
                     LoginPath = new PathString("/login"),
-                    LogoutPath = new PathString("/logout")
+                    LogoutPath = new PathString("/logout"),
+                    AutomaticChallenge = true
                 })
+
                 .UseMicrosoftAccountAuthentication(new MicrosoftAccountOptions
                 {
                     ClientId = Configuration["Authentication:Microsoft:ClientId"],
                     ClientSecret = Configuration["Authentication:Microsoft:ClientSecret"],
-                    AutomaticAuthenticate = true,
-                    AutomaticChallenge = true,
-                    SaveTokens = true,
-                    SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme,
                     Events = new OAuthEvents
                     {
                         OnCreatingTicket = async context =>
@@ -136,6 +132,7 @@ namespace WeekInDotnet
                         }
                     }
                 })
+
                 .Map("/login", builder =>
                 {
                     builder.Run(async context =>
@@ -146,6 +143,7 @@ namespace WeekInDotnet
                         });
                     });
                 })
+
                 .Map("/logout", builder =>
                 {
                     builder.Run(async context =>
@@ -153,12 +151,11 @@ namespace WeekInDotnet
                         await context.Authentication.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                         context.Response.Redirect("/");
                     });
-                });
+                })
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+                .UseSession()
+                
+                .UseMvc();
 
             linksContext.Database.EnsureCreated();
         }

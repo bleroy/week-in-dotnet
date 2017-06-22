@@ -8,7 +8,6 @@ using System;
 using System.Text;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
-using WeekInDotnet.Attributes;
 
 namespace WeekInDotnet.Controllers
 {
@@ -72,7 +71,7 @@ namespace WeekInDotnet.Controllers
         }
 
         // GET api/links/newkey
-        [LogInRequired]
+        [Authorize(Roles = "KeyIssuer")]
         [HttpGet("newkey")]
         public string NewKey()
         {
