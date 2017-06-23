@@ -17,7 +17,7 @@
     <link rel="icon" href="/favicon.ico">
 </head>
 <body>
-    <header class="navbar navbar-static-top navbar-inverse bg-inverse">
+    <header class="navbar navbar-static-top navbar-inverse">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbarNav" aria-expanded="false">
@@ -29,11 +29,11 @@
                 <a class="navbar-brand" href="~/">The Week in .NET</a>
             </div>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class=" nav navbar-nav">
+                <ul class="nav navbar-nav navbar-right">
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li>
-                            <a asp-controller="Links" asp-action="Admin">Admin</a>
+                            <a asp-controller="LinksAdmin" asp-action="Index">Admin</a>
                         </li>
                         <li>
                             <a href="~/logout">Logout</a>
@@ -45,11 +45,11 @@
                             <a href="~/login">Login</a>
                         </li>
                     }
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li><p class="navbar-text" style="text-align: right;padding-right: 16px;">Signed in as @User.Identity.Name</p></li>
+                    }
                 </ul>
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <span class="nav-text">@User.Identity.Name</span>
-                }
             </div>
         </div>
     </header>
