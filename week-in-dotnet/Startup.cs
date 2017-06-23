@@ -153,6 +153,16 @@ namespace WeekInDotnet
                     });
                 })
 
+                .Map("/Account/AccessDenied", builder =>
+                {
+                    builder.Run(async context =>
+                    {
+                        await context.Response.WriteAsync("Access denied.");
+                    });
+                })
+
+                .UseStatusCodePages()
+
                 .UseSession()
                 
                 .UseMvc();
