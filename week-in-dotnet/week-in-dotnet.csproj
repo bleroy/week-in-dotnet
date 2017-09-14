@@ -7,10 +7,8 @@
     <AssemblyName>WeekInDotnet</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
   <ItemGroup>
+    <Content Remove="wwwroot\*" />
     <Content Include="wwwroot\scripts\add-link.js" />
   </ItemGroup>
   <ItemGroup>
